@@ -1,0 +1,190 @@
+Project Reiko: Comprehensive Plan
+
+1. Project Overview
+- Project Name: Reiko (Your Personal Assistant)
+- Purpose: To create a personal assistant that tracks user emotions, provides responses, and evolves over time.
+- Key Features:
+  1. Emotion tracking using keywords, intensifiers, and negations.
+  2. Modular and extensible code structure for easy future upgrades.
+  3. Sentiment history tracking for analyzing mood trends.
+  4. Interactive console output with colors for better user experience.
+
+2. Directory Structure
+Project_Reiko/
+├── .vscode/                  # VS Code-specific settings (optional)
+│   ├── settings.json         # Editor settings
+│   ├── tasks.json            # Build tasks
+│   ├── launch.json           # Debug configurations
+├── build/                    # Compiled binaries and object files
+├── include/                  # Header files
+│   ├── library.h             # Shared declarations and utility functions
+│   ├── emotion.h             # Header for emotion tracking
+│   ├── filemanager.h         # Header for file operations
+├── responses/                # Data files for responses and modifiers
+│   ├── happy_replies_moderate.txt    # Moderate happy replies
+│   ├── happy_replies_strong.txt      # Strong happy replies
+│   ├── sad_replies_moderate.txt      # Moderate sad replies
+│   ├── sad_replies_strong.txt        # Strong sad replies
+│   ├── angry_replies_moderate.txt    # Moderate angry replies
+│   ├── angry_replies_strong.txt      # Strong angry replies
+│   ├── fear_replies_moderate.txt     # Moderate fear replies
+│   ├── fear_replies_strong.txt       # Strong fear replies
+│   ├── disgust_replies_moderate.txt  # Moderate disgust replies
+│   ├── disgust_replies_strong.txt    # Strong disgust replies
+│   ├── surprise_replies.txt          # Replies for surprise emotion
+│   ├── neutral_replies.txt           # Replies for neutral emotion
+│   ├── emotion_words.txt             # Emotion words and their values
+│   ├── intensifiers.txt              # Intensifier words and their values
+│   ├── valid_words.txt               # Valid words for typo correction
+│   ├── hi_words.txt                  # Greeting words
+├── source_code/              # Source code files
+│   ├── main.cpp              # Entry point of the program
+│   ├── preload.cpp           # Preloads data into global variables
+│   ├── emotionTracker.cpp    # Handles emotion analysis and tracking
+│   ├── filemanager.cpp       # Handles file operations (loading, appending)
+│   ├── responseManager.cpp   # Manages replies and responses
+│   ├── sentenceProcessing.cpp # Handles input normalization and tokenization
+├── docs/                     # Documentation for the project
+│   ├── README.md             # Project overview and instructions
+│   ├── CONTRIBUTING.md       # Contribution guidelines (optional)
+│   ├── CHANGELOG.md          # Change log for tracking updates
+├── others/                   # Miscellaneous files
+│   ├── error.log             # Error logs for debugging
+│   ├── user_data.txt         # User-specific data (if needed)
+├── CMakeLists.txt            # CMake build configuration (optional)
+├── Makefile                  # Makefile for building the project (optional)
+└── README.md                 # Main project overview
+
+   
+   ---
+   
+   ## 3. Planned `.cpp` Files
+   
+   ### **1. `main.cpp`**
+   - **Purpose**: Entry point of the program.
+   - **Responsibilities**:
+     1. Check if required directories and files exist.
+     2. Call the `preload()` function to initialize global variables.
+     3. Call the `fixTypo()` function to process user input.
+     4. Call `keyWord_match()` to analyze the input and generate responses.
+   
+   ---
+   
+   ### **2. `preload.cpp`**
+   - **Purpose**: Preloads data into global variables.
+   - **Responsibilities**:
+     1. Load emotion words, intensifiers, and replies from files.
+     2. Initialize global variables for emotion tracking.
+     3. Load user mood history for analysis.
+   
+   ---
+   
+   ### **3. `emotionTracker.cpp`**
+   - **Purpose**: Handles emotion analysis and tracking.
+   - **Responsibilities**:
+     1. Parse and analyze user input to calculate sentiment scores.
+     2. Apply intensifiers and negations to adjust sentiment scores.
+     3. Store sentiment history for mood tracking.
+     4. Track unknown emotion words and intensifiers for learning.
+   
+   ---
+   
+   ### **4. `filemanager.cpp`**
+   - **Purpose**: Handles file operations.
+   - **Responsibilities**:
+     1. Load data from files (e.g., emotion words, intensifiers).
+     2. Append new data to files.
+     3. Save updated emotion words and intensifiers.
+   
+   ---
+   
+   ### **5. `responseManager.cpp`**
+   - **Purpose**: Manages replies and responses.
+   - **Responsibilities**:
+     1. Select a reply based on the sentiment score and emotion type.
+     2. Handle multiple emotions in a single sentence.
+     3. Append user-defined replies to the appropriate file.
+   
+   ---
+   
+   ### **6. `sentenceProcessing.cpp`**
+   - **Purpose**: Handles input normalization and tokenization.
+   - **Responsibilities**:
+     1. Normalize user input (convert to lowercase).
+     2. Tokenize sentences into words and punctuation.
+     3. Remove greetings from input.
+   
+   ---
+   
+   ## 4. Sentiment Analysis System
+   
+   ### **1. Keyword Matching**
+   - Assign weights to words based on sentiment intensity:
+     - Strongly positive: +3
+     - Weakly positive: +1
+     - Strongly negative: -3
+     - Weakly negative: -1
+     - Neutral: 0
+   
+   ---
+   
+   ### **2. Intensifiers**
+   - Words like "very" and "slightly" modify the intensity of sentiment words.
+   - Example values:
+     - "very" → 2.0
+     - "slightly" → 0.5
+   
+   ---
+   
+   ### **3. Negations**
+   - Words like "not" and "never" invert the sentiment of the emotion word they modify.
+   - Example values:
+     - "not" → -1.0
+     - "never" → -1.0
+   
+   ---
+   
+   ### **4. Mixed Sentiments**
+   - Calculate the total sentiment score by summing up the values of all emotion words in the sentence.
+   - Example:
+     - Input: "Great, I am feeling bad."
+     - Positive word: "great" → +2
+     - Negative word: "bad" → -2
+     - Total score: 2 + (-2) = 0 (neutral sentiment).
+   
+   ---
+   
+   ### **5. Sentiment History**
+   - Store the last 5-10 sentiment scores in a `vector<double>`.
+   - Apply a decay function so older inputs have less impact over time.
+   
+   ---
+   
+   ## 5. Console Output with Colors
+   - Use ANSI escape codes to add colors to the console output:
+     - Green for positive responses: `\033[32m`
+     - Yellow for neutral responses: `\033[33m`
+     - Red for negative responses: `\033[31m`
+   - Example:
+     ```cpp
+     cout << "\033[32mPositive response detected!\033[0m" << endl; // Green text    
+  ---
+  
+  ### **Key Updates**
+  1. **Reply Files**:
+     - Added [happy_replies_moderate.txt](http://_vscodecontentref_/0), [happy_replies_strong.txt](http://_vscodecontentref_/1), and similar files for all emotions.
+     - Included [neutral_replies.txt](http://_vscodecontentref_/2) and [surprise_replies.txt](http://_vscodecontentref_/3).
+  
+  2. **File Descriptions**:
+     - Updated descriptions for [preload.cpp](http://_vscodecontentref_/4), [sentenceProcessing.cpp](http://_vscodecontentref_/5), and other files.
+  
+  3. **Negations and Intensifiers**:
+     - Clarified the role of negations and intensifiers in sentiment analysis.
+  
+  4. **Future Upgrades**:
+     - Expanded the list of future upgrades to include more sentiments and mobile integration.
+  
+  5. **Testing**:
+     - Highlighted the importance of unit tests for each module.
+  
+  Let me know if you need further adjustments or additional features!

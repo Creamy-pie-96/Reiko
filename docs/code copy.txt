@@ -1,0 +1,445 @@
+main.cpp
+-----------------------
+#include "library.h"
+#include <iostream>
+#include <unordered_set>
+using namespace std;
+
+int main() {
+    cout << "Starting the main function..." << endl;
+
+    // Call preload to initialize global variables
+    preload();
+
+    // Test case for user input
+    unordered_set<string> user_input = {"I am feeling gud.", "This is a tst.", "I am okay!"};
+    cout << "Original user input:" << endl;
+    for (const auto& sentence : user_input) {
+        cout << sentence << endl;
+    }
+    user_input.insert("__EnD_Of_InPuT_123!@#__"); //this is added to the end of user input because I need to know where the user input is ending.
+    //__EnD_Of_InPuT_123!@#__ this means the end of user input
+    // Call fixTypo to process the input
+    fixTypo(user_input);
+
+    return 0;
+}
+
+preload.cpp
+--------------
+#include <iostream>
+#include <fstream>
+#include "filemanager.h"
+#include "library.h"
+
+using namespace std;
+
+// Define the global variables declared as extern in library.h
+unordered_set<string> valid_words;
+unordered_set<string> hi_words;
+
+unordered_set<string> positive_sentences;
+unordered_set<string> neutral_sentences;
+unordered_set<string> negative_sentences;
+
+unordered_map<string, int> emotion_words; // Unified map for all emotion words
+unordered_map<string, int> intensifier_words;
+
+unordered_set<string> positive_replies;
+unordered_set<string> neutral_replies;
+unordered_set<string> negative_replies;
+
+void preload() {
+    cout << "Preloading data..." << endl;
+
+    // Manually populate data for testing
+    valid_words = {"good", "test", "feeling", "am", "this", "is", "i", "okay", "bad","hey", "hello", "yo", "hi"};
+    hi_words = {"hey", "hello", "yo", "hi"};
+    positive_sentences = {"I am feeling good.", "This is great!"};
+    neutral_sentences = {"This is okay.", "I am fine."};
+    negative_sentences = {"I am feeling bad.", "This is terrible."};
+
+    // Unified emotion words map
+    emotion_words = {
+        {"good", 2}, {"great", 3}, {"amazing", 4},  // Positive words
+        {"okay", 0}, {"fine", 0},                  // Neutral words
+        {"bad", -2}, {"terrible", -3}, {"awful", -4} // Negative words
+    };
+
+    intensifier_words = {
+        {"very", 2}, {"greatly", 3}, {"amazingly", 4},  // Positive words
+        {"slightly", 0.5}, {"terriblly", 3}, {"awfully", 3} // Negative words
+    };
+
+    positive_replies = {"That's wonderful!", "Keep it up!"};
+    neutral_replies = {"Alright.", "Okay."};
+    negative_replies = {"I'm sorry to hear that.", "Hope things get better."};
+
+    cout << "Preloading complete." << endl;
+}
+
+fixtypo.cpp
+----------------------
+#include "library.h"
+#include "emotion.h"
+#include <algorithm>
+#include <iostream>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <string>
+#include <climits> // For INT_MAX
+using namespace std;
+
+// Function to calculate the edit distance between two strings
+int edit_distance(const string& token, const string& valid_word) {
+    int row = token.size();
+    int col = valid_word.size();
+
+    // Initialize the DP table
+    vector<vector<int>> dp(row + 1, vector<int>(col + 1));
+
+    for (int i = 0; i <= row; i++) dp[i][0] = i; // Cost of deletions
+    for (int j = 0; j <= col; j++) dp[0][j] = j; // Cost of insertions
+
+    // Fill the DP table
+    for (int i = 1; i <= row; i++) {
+        for (int j = 1; j <= col; j++) {
+            if (token[i - 1] == valid_word[j - 1]) {
+                dp[i][j] = dp[i - 1][j - 1]; // Characters match
+            } else {
+                dp[i][j] = 1 + min({dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]}); // Min of insert, delete, replace
+            }
+        }
+    }
+
+    return dp[row][col];
+}
+
+// Function to check if two strings are similar based on a threshold
+bool are_similer(const string& userinput, const string& match, double threshold) {
+    // Calculate the edit distance
+    int dis = edit_distance(userinput, match);
+    int matchlen = match.size();
+
+    // Avoid division by zero
+    if (matchlen == 0 || userinput.size() == 0) {
+        return false;
+    }
+
+    // Calculate similarity ratio
+    double base_ratio = 1.0 - threshold; // Threshold for allowable error
+    double forgiving = 1.0; // Forgiveness factor for small inputs
+    double max_ratio = base_ratio + (forgiving / userinput.size());
+    double ratio = (double)dis / (double)matchlen;
+
+    // Return true if the ratio is within the allowable range
+    return (ratio <= max_ratio);
+}
+
+// Function to fix typos in user input
+void fixTypo(unordered_set<string>& user_input) {
+    if(user_input.empty()){
+        cout<<"Error: User input is empty!"<<endl;
+        return;
+    }
+   
+    // Tokenize the input
+    unordered_map<int, string> tokenizedInput = tokenizer(user_input);
+
+    // Iterate over the tokens and replace them if they are similar
+    for (auto& [index, token] : tokenizedInput) {
+        if(token=="__EnD_Of_InPuT_123!@#__")
+        {
+            continue;
+        }
+        string closest_word;
+        bool found_similar = false;
+
+        // Check if the token is similar to any valid word
+        for (const auto& valid_word : valid_words) {
+            if (are_similer(token, valid_word, 0.9)) {
+                closest_word = valid_word;
+                found_similar = true;
+                break; // Stop checking once a similar word is found
+            }
+        }
+
+        // Replace the token with the closest valid word if similar
+        if (found_similar) {
+            token = closest_word; // Update the value in the map
+        }
+    }
+    for (const auto& [index, token] : tokenizedInput) {
+        keyWord_match(token,index);
+    }
+}
+
+emotionTracker.cpp
+------------------------
+#include "library.h"
+#include "emotion.h"
+using namespace std;
+
+double emotionScore = 0;
+vector<double> emotionPer_sentence;
+vector<pair<int, int>> intensifiervalu_andItsIndex; // first is value and second is index
+bool is_hi=false;
+int startIndex=0;
+// Function to calculate the cumulative intensifier value for a given range
+double intensifier(const int &startingIndex, const int &endingIndex) {
+    double intensify = 1;
+
+    for (const auto &i : intensifiervalu_andItsIndex) {
+        if (i.second >= startingIndex && i.second <= endingIndex) {
+            intensify *= i.first;
+        }
+    }
+    return intensify;
+}
+void thisIstheEnd()
+{
+   emotionPer_sentence.push_back(emotionScore);
+   emotionScore=0;
+   responseGenarate();
+   return;
+}
+// Function to match keywords and calculate emotion score
+void keyWord_match(const string tokenizedInput, const int index) {
+    if(tokenizedInput=="__EnD_Of_InPuT_123!@#__"){
+        
+        thisIstheEnd();
+        return;
+    }
+    auto iter=hi_words.find(tokenizedInput);
+    if(iter!=hi_words.end()) is_hi=true; // this means sentense has hi or hello type words
+
+    double actualEmotionValue = 0.0;
+    auto itr = intensifier_words.find(tokenizedInput);
+    if (tokenizedInput == "." || tokenizedInput == "!" || tokenizedInput == "?") {
+        // End of sentence: Store the current sentence score and reset
+        intensifiervalu_andItsIndex.clear();
+        emotionPer_sentence.push_back(emotionScore);
+        emotionScore = 0;
+        startIndex=index+1;
+    } else if (itr != intensifier_words.end()) {
+        // Add intensifier value and index
+        intensifiervalu_andItsIndex.emplace_back(itr->second, index);
+    } else {
+        auto it = emotion_words.find(tokenizedInput);
+        if (it != emotion_words.end()) {
+            int emotionValue = it->second;
+            int intensify = intensifier(startIndex, index);
+            if(intensify<-1 || (intensify>-1 && intensify<0)) intensify=-1/intensify; // this is bcz not very good means slightly good
+            startIndex=index+1;
+            actualEmotionValue = emotionValue * intensify;
+            emotionScore += actualEmotionValue;
+        }
+    }
+    return;
+}
+
+sentenceProcess.cpp
+---------------------
+#include "library.h"
+#include <algorithm>
+#include <sstream>
+#include <cctype>
+using namespace std;
+
+void normalizer(unordered_set<string>& input) {
+    unordered_set<string> normalizedSet;
+
+    for (const auto& word : input) {
+        string normalizedWord = word;
+        if (word == "__EnD_Of_InPuT_123!@#__") {
+            // Preserve the end-of-input marker as is
+            normalizedSet.insert(word);
+            continue;
+        }
+
+        // Convert to lowercase
+        transform(normalizedWord.begin(), normalizedWord.end(), normalizedWord.begin(), ::tolower);
+
+        normalizedSet.insert(normalizedWord);
+    }
+
+    input = normalizedSet;
+}
+
+unordered_map<int, string> tokenizer(unordered_set<string>& user_input) {
+    normalizer(user_input);
+    unordered_map<int, string> tokenMap;
+    int index = 0;
+
+    for (const auto& sentence : user_input) {
+        istringstream stream(sentence);
+        string word;
+        if(word=="__EnD_Of_InPuT_123!@#__")
+            {
+                tokenMap[index++]="__EnD_Of_InPuT_123!@#__";
+                continue;
+                
+            }
+        while (stream >> word) {
+            
+            if (ispunct(word.back())) {
+                char punctuation = word.back();
+                word.pop_back();
+                if (!word.empty()) {
+                    tokenMap[index++] = word;
+                }
+                if (punctuation == '!' || punctuation == '.' || punctuation == '?') {
+                    string punct(1, punctuation);
+                    tokenMap[index++] = punct;
+                }
+            } else {
+                tokenMap[index++] = word;
+            }
+        }
+    }
+
+    return tokenMap;
+}
+
+filemanager.cpp
+--------------------------
+#include <iostream>
+#include <fstream>
+#include <unordered_set>
+#include <unordered_map>
+using namespace std;
+
+void fileManager(string filename, unordered_set<string>& input) {
+    ifstream file(filename);
+    if (!file) {
+        cerr << "Error opening file: " << filename << endl;
+        return;
+    }
+    string line;
+
+    while (getline(file, line)) {
+        input.insert(line);
+    }
+    file.close();
+
+    // Debug output
+    cout << "File loaded: " << filename << endl;
+    for (const auto& line : input) {
+        cout << line << endl;
+    }
+}
+
+void FileManager(string filename, unordered_map<string, int>& input) {
+    ifstream file(filename);
+    if (!file) {
+        cerr << "Error opening file: " << filename << endl;
+        return;
+    }
+
+    string key;
+    int value;
+
+    while (file >> key >> value) {
+        input[key] = value;
+    }
+    file.close();
+
+    // Debug output
+    cout << "File loaded: " << filename << endl;
+    for (const auto& [key, value] : input) {
+        cout << key << ": " << value << endl;
+    }
+}
+
+response.cpp
+-------------------
+#include "emotion.h"
+using namespace std;
+
+void respondHI()
+{
+    cout<<"Hi there, I am REIKO. Your caring helpfull emotion tracker!"<<endl; //later I will add the huge file based hallo reply
+}
+
+void responseGenarate()
+{
+    if(is_hi) respondHI();
+    int i=1; // this is for test run just!
+    double avgEmotion=0;
+    for(const double& emotionValue: emotionPer_sentence)
+    {
+        cout<<"Your emotion in "<<i<<" sentence is : "<<emotionValue<<endl;
+        i++;
+        avgEmotion+=emotionValue;
+    }
+    avgEmotion=avgEmotion/i;
+    cout<<"Your overall emotion is :"<<avgEmotion<<endl;
+}
+
+library.h
+-------------
+#pragma once
+#include <iostream>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+#include <string>
+
+using namespace std;
+
+// Defined functions
+void preload();
+void search();
+void fixTypo(unordered_set<string>& user_input);
+void normalizer(unordered_set<string>& user_input);
+unordered_map<int, string> tokenizer(unordered_set<string>& user_input);
+
+// Data structures and global variables
+extern unordered_set<string> valid_words;
+
+extern unordered_set<string> positive_sentences;
+extern unordered_set<string> neutral_sentences;
+extern unordered_set<string> negative_sentences;
+
+extern unordered_map<string, int> emotion_words; // Unified map for all emotion words
+
+extern unordered_set<string> positive_replies;
+extern unordered_set<string> neutral_replies;
+extern unordered_set<string> negative_replies;
+
+extern unordered_set<string> user_input;
+
+filemanager.h 
+----------------
+#pragma once
+#include<unordered_map>
+#include<unordered_set>
+#include<string>
+using namespace std;
+
+void fileManager(string filename,unordered_set<string> &input);
+void FileManager(string filename,unordered_map<string, int>& input);
+
+
+emotion.h 
+---------------
+#pragma once
+#include<iostream>
+#include<unordered_map>
+#include<unordered_set>
+#include<string>
+#include<vector>
+using namespace std;
+
+void keyWord_match(const string tokenizedInput,const int index);
+void responseGenarate();
+
+extern vector<int> saveNegation;
+extern double emotionScore;
+extern int startIndex;
+extern vector<double> emotionPer_sentence;
+extern unordered_map<string, int> intensifier_words;
+extern vector<pair<int, int>> intensifiervalu_andItsIndex;
+extern unordered_set<string> hi_words;
+extern bool is_hi;

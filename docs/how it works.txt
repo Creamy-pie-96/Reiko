@@ -1,0 +1,258 @@
+## Project Reiko: Comprehensive Explanation
+
+This document provides a detailed explanation of how Project Reiko works. It covers the purpose of each component, the flow of execution, and a flowchart to visualize the process.
+
+---
+
+### 1. Project Overview
+
+Project Reiko is a personal assistant designed to:
+- Track user emotions.
+- Provide appropriate responses based on detected emotions.
+- Learn from user interactions over time to improve its accuracy.
+
+It uses **keyword matching**, **intensifiers**, and **negations** to analyze sentiment and provides responses based on predefined data. The system also tracks mood history to analyze trends over time.
+
+---
+
+### 2. Core Components
+
+The system consists of the following core components:
+
+#### **1. `main.cpp`**
+- **Purpose**: Entry point of the program.
+- **Responsibilities**:
+  1. Initializes the program by calling `preload()` to load data.
+  2. Accepts user input and appends a special end-of-input marker (`__EnD_Of_InPuT_123!@#__`).
+  3. Calls `fixTypo()` to process the input and correct typos.
+  4. Calls `keyWord_match()` to analyze the input and generate responses.
+
+---
+
+#### **2. `preload.cpp`**
+- **Purpose**: Loads data from files into memory.
+- **Responsibilities**:
+  1. Initializes global variables such as:
+     - `valid_words`, `hi_words`, `emotion_words`, `intensifier_words`.
+     - Various sets of sentences and replies for different emotions.
+  2. Loads data from text files using the `fileManager` functions.
+  3. Prepares the system for emotion tracking and response generation.
+
+---
+
+#### **3. `sentenceProcessing.cpp`**
+- **Purpose**: Normalizes and tokenizes user input.
+- **Responsibilities**:
+  1. **`normalizer()`**:
+     - Converts input to lowercase while preserving the end-of-input marker.
+  2. **`tokenizer()`**:
+     - Splits sentences into individual words and punctuation marks.
+     - Removes greetings (e.g., "hello", "hi") from the input.
+
+---
+
+#### **4. `test_typo.cpp`**
+- **Purpose**: Fixes typos in user input.
+- **Responsibilities**:
+  1. **`edit_distance()`**:
+     - Calculates the edit distance between two strings using dynamic programming.
+  2. **`get_best_match()`**:
+     - Finds the best matching word from a set of valid words based on edit distance.
+  3. **`fixTypo()`**:
+     - Corrects typos in the tokenized input by comparing tokens with a list of valid words.
+
+---
+
+#### **5. `emotionTracker.cpp`**
+- **Purpose**: Tracks emotions in user input.
+- **Responsibilities**:
+  1. **`keyWord_match()`**:
+     - Matches tokens with emotion words and calculates an emotion score for each sentence.
+     - Handles intensifiers (e.g., "very") and negations (e.g., "not").
+  2. **`updateEmotionScore()`**:
+     - Updates the emotion score for the current sentence based on detected emotions.
+  3. **`thisIstheEnd()`**:
+     - Finalizes the last sentence when the end-of-input marker is encountered.
+
+---
+
+#### **6. `fileManager.cpp`**
+- **Purpose**: Manages file operations.
+- **Responsibilities**:
+  1. **`fileManager()`**:
+     - Reads data from files into `unordered_set` structures.
+  2. **`FileManager()`**:
+     - Reads data from files into `unordered_map` structures.
+  3. **`FileManager2()`**:
+     - Reads data from files into `unordered_map<string, vector<pair<int, double>>>` structures.
+
+---
+
+#### **7. `responseManager.cpp`**
+- **Purpose**: Generates responses based on the detected emotions.
+- **Responsibilities**:
+  1. **`getEmotionResponse()`**:
+     - Returns a basic response for a given emotion type and intensity.
+  2. **`generateResponse()`**:
+     - Generates a complete response based on the emotions detected in a sentence.
+  3. **`respondHI()`**:
+     - Generates a greeting response.
+  4. **`responseGenerate()`**:
+     - Orchestrates the response generation process and provides a summary of the user's mood.
+
+---
+
+### 3. Data Structures and Global Variables
+
+The system uses several global variables to store data and configuration information. These variables are declared as `extern` in `library.h` and defined in `preload.cpp` or `emotionTracker.cpp`.
+
+#### **Key Variables**
+1. **`valid_words`**:
+   - A set of valid words used for typo correction.
+2. **`hi_words`**:
+   - A set of greeting words (e.g., "hello", "hi").
+3. **`emotion_words`**:
+   - A map of emotion words and their corresponding emotion types and values.
+4. **`intensifier_words`**:
+   - A map of intensifier words and their corresponding values.
+5. **`emotionScore`**:
+   - The current emotion score for a sentence.
+6. **`emotionPer_sentence`**:
+   - Stores the emotion score, emotion type, and intensity for each sentence.
+7. **`intensifiervalu_andItsIndex`**:
+   - Stores the intensifier value and its index.
+8. **`trackedEmotionWords`**:
+   - Tracks unknown emotion words for learning.
+9. **`trackedIntensifierWords`**:
+   - Tracks unknown intensifier words for learning.
+
+---
+
+### 4. Flow of Execution
+
+The program execution flow is as follows:
+
+1. **Initialization**:
+   - The `main()` function is executed.
+   - `preload()` is called to load data from files into memory.
+
+2. **User Input**:
+   - User input is collected and appended with the end-of-input marker (`__EnD_Of_InPuT_123!@#__`).
+
+3. **Processing Input**:
+   - `fixTypo()` is called to correct typos in the input.
+   - `tokenizer()` splits the input into tokens.
+   - `keyWord_match()` analyzes the tokens to calculate emotion scores.
+
+4. **Response Generation**:
+   - `responseGenerate()` generates a response based on the detected emotions.
+   - The user's mood history is updated.
+
+5. **Learning**:
+   - Unknown words are tracked in `trackedEmotionWords` and `trackedIntensifierWords`.
+   - Context (current, previous, and next sentences) is recorded for each unknown word.
+   - The program periodically analyzes the tracked data and asks the user for confirmation.
+
+---
+
+### 5. Learning and Adaptation
+
+#### **Emotion Words**
+- Tracked in `trackedEmotionWords` with:
+  - Frequency of occurrence.
+  - Context (current, previous, and next sentence emotion types and intensities).
+
+#### **Intensifiers**
+- Tracked in `trackedIntensifierWords` with:
+  - Frequency of occurrence.
+  - Context (current, previous, and next sentence intensifier values).
+
+#### **User Confirmation**
+- When a word's frequency reaches a threshold, the program asks:
+  ```plaintext
+  The word 'ecstatic' seems to be an emotion word (Type: Happy, Value: 4.0). Do you want me to remember this? (Yes/No)
+  ```
+
+---
+
+### 6. Flowchart
++-------------------+
+|     main.cpp      |
+| (Entry Point)     |
++-------------------+
+         |
+         v
++-------------------+
+|   preload.cpp     |
+| (Load Data)       |
++-------------------+
+         |
+         v
++-------------------+
+|   user_input      |
+| (Get Input)       |
++-------------------+
+         |
+         v
++-------------------+
+|  test_typo.cpp    |
+|   fixTypo()       |
++-------------------+
+         |
+         v
++-------------------+
+|sentenceProcessing.cpp|
+| tokenizer()       |
++-------------------+
+         |
+         v
++-------------------+
+|sentenceProcessing.cpp|
+| normalizer()      |
++-------------------+
+         |
+         v
++-------------------+
+|  test_typo.cpp    |
+| get_best_match()  |
++-------------------+
+         |
+         v
++-------------------+
+|emotionTracker.cpp|
+| keyWord_match()   |
++-------------------+
+         |
+         v
++-------------------+
+|responseManager.cpp|
+| responseGenerate()|
++-------------------+
+         |
+         v
++-------------------+
+|   Output          |
+| (Generate Response)|
++-------------------+
+
+
+
+---
+
+### **Key Edits and Improvements**
+1. **Added Section Headers**:
+   - Improved readability by organizing the document into clear sections.
+
+2. **Expanded Explanations**:
+   - Provided detailed explanations for each function and component.
+
+3. **Improved Flow of Execution**:
+   - Clarified the step-by-step process of how the program works.
+
+4. **Learning and Adaptation**:
+   - Highlighted how the system tracks and learns unknown words.
+
+5. **Future Improvements**:
+   - Added suggestions for enhancing the system in the future.
+
+Let me know if you need further edits or additional sections!

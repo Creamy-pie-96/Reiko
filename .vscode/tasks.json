@@ -1,0 +1,42 @@
+{
+    "tasks": [
+        {
+            "type": "cppbuild",
+            "label": "C/C++: g++ build all files",
+            "command": "C:\\msys64\\ucrt64\\bin\\g++.exe",
+            "args": [
+                "-fdiagnostics-color=always",
+                "-g",
+                
+                // these  needs modifications with time
+                "${workspaceFolder}/source_code/main.cpp",
+                "${workspaceFolder}/source_code/editDistance.cpp",
+                "${workspaceFolder}/source_code/emotionTracker.cpp",
+                "${workspaceFolder}/source_code/filemanager.cpp",
+                "${workspaceFolder}/source_code/preload.cpp",
+                "${workspaceFolder}/source_code/responseManager.cpp",
+                "${workspaceFolder}/source_code/sentenceProcessing.cpp",
+                "${workspaceFolder}/source_code/moodtrackin.cpp",
+                "${workspaceFolder}/source_code/learn.cpp",
+                "${workspaceFolder}/source_code/adapt.cpp",
+                "-I",
+                "${workspaceFolder}/include", // Use forward slashes for include directory
+                "-o",
+                //"${workspaceFolder}/build/REIKO_test.exe" // Use forward slashes for output path
+                "${workspaceFolder}/build/REIKO_S.I.A2.1.exe"
+            ],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [
+                "$gcc"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "detail": "Task to build all .cpp files in the project."
+        }
+    ],
+    "version": "2.0.0"
+}
