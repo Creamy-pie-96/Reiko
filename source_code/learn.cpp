@@ -5,7 +5,7 @@
 using namespace std;
 
 void saveTrackedData(const string& emotionFile, const string& intensifierFile) {
-    // Save tracked emotion words
+    
     ofstream emotionOut(emotionFile);
     if (!emotionOut) {
         cerr << "Error saving tracked emotion words to file: " << emotionFile << endl;
@@ -15,13 +15,12 @@ void saveTrackedData(const string& emotionFile, const string& intensifierFile) {
     for (const auto& [word, data] : trackedEmotionWords) {
         emotionOut << word << " " << data.frequency;
         for (const auto& [type, value] : data.context) {
-            emotionOut << " " << type << " " << value; // Save emotion type and intensity
+            emotionOut << " " << type << " " << value; 
         }
         emotionOut << endl;
     }
     emotionOut.close();
 
-    // Save tracked intensifier words
     ofstream intensifierOut(intensifierFile);
     if (!intensifierOut) {
         cerr << "Error saving tracked intensifier words to file: " << intensifierFile << endl;
@@ -31,7 +30,7 @@ void saveTrackedData(const string& emotionFile, const string& intensifierFile) {
     for (const auto& [word, data] : trackedIntensifierWords) {
         intensifierOut << word << " " << data.frequency;
         for (double value : data.context) {
-            intensifierOut << " " << value; // Save intensifier values
+            intensifierOut << " " << value; 
         }
         intensifierOut << endl;
     }
@@ -39,7 +38,7 @@ void saveTrackedData(const string& emotionFile, const string& intensifierFile) {
 }
 
 void loadTrackedData(const string& emotionFile, const string& intensifierFile) {
-    // Load tracked emotion words
+    
     ifstream emotionIn(emotionFile);
     if (!emotionIn) {
         cerr << "Error loading tracked emotion words from file: " << emotionFile << endl;
@@ -60,7 +59,6 @@ void loadTrackedData(const string& emotionFile, const string& intensifierFile) {
     }
     emotionIn.close();
 
-    // Load tracked intensifier words
     ifstream intensifierIn(intensifierFile);
     if (!intensifierIn) {
         cerr << "Error loading tracked intensifier words from file: " << intensifierFile << endl;
@@ -74,7 +72,7 @@ void loadTrackedData(const string& emotionFile, const string& intensifierFile) {
 
         double value;
         while (intensifierIn.peek() != '\n' && intensifierIn >> value) {
-            trackedIntensifierWords[word].context.push_back(value); // Load intensifier values
+            trackedIntensifierWords[word].context.push_back(value); 
         }
     }
     intensifierIn.close();
@@ -83,16 +81,14 @@ void loadTrackedData(const string& emotionFile, const string& intensifierFile) {
 void analyzeEmotionWordWithoutContext(const string& word, TrackedEmotionWord& data, unordered_map<int, string>& emotionTypeNames) {
     cout << "The word '" << word << "' has no context. Checking emotion history..." << endl;
 
-    // Guess the emotion type based on the most recent emotion history
-    int guessedType = 7; // Default to Neutral
+    int guessedType = 7; 
     if (!moodHistory.empty()) {
-        guessedType = static_cast<int>(moodHistory.back()); // Use the last emotion type
+        guessedType = static_cast<int>(moodHistory.back()); 
     }
 
-    // Ensure guessedType is valid
     if (emotionTypeNames.find(guessedType) == emotionTypeNames.end()) {
         cout << "Error: Invalid guessed emotion type. Defaulting to 'Neutral'." << endl;
-        guessedType = 7; // Default to Neutral
+        guessedType = 7;
     }
 
     cout << "Previously, you were feeling " << emotionTypeNames[guessedType] << "." << endl;
@@ -102,11 +98,9 @@ void analyzeEmotionWordWithoutContext(const string& word, TrackedEmotionWord& da
     cin >> userResponse;
 
     if (userResponse == "Yes" || userResponse == "yes") {
-        // Save the word as an emotion word with the guessed type
-        emotion_words[word].push_back({guessedType, 1.0}); // Default intensity
+        emotion_words[word].push_back({guessedType, 1.0}); 
         saveEmotionWords("../mechine knowledge/emotion_words.txt");
     } else {
-        // Allow the user to select a different emotion type
         cout << "Please select the correct emotion type for the word '" << word << "':" << endl;
         for (const auto& [type, name] : emotionTypeNames) {
             cout << type << ". " << name << endl;
@@ -117,14 +111,13 @@ void analyzeEmotionWordWithoutContext(const string& word, TrackedEmotionWord& da
         cin >> userChoice;
 
         if (userChoice == 0) {
-            // Skip the word
             cout << "Skipping the word '" << word << "'." << endl;
             adjective_words.erase(word);
             saveAdjectiveWords("../mechine knowledge/adjective.txt");
         } else if (emotionTypeNames.find(userChoice) != emotionTypeNames.end()) {
-            // Save the word with the selected emotion type
+            
             cout << "Saving the word '" << word << "' as a " << emotionTypeNames[userChoice] << " emotion." << endl;
-            emotion_words[word].push_back({userChoice, 1.0}); // Default intensity
+            emotion_words[word].push_back({userChoice, 1.0}); 
             saveEmotionWords("../mechine knowledge/emotion_words.txt");
         } else {
             cout << "Invalid choice. Skipping the word '" << word << "'." << endl;
@@ -155,12 +148,11 @@ void analyzeEmotionWordWithContext(const string& word, TrackedEmotionWord& data,
     cin >> userResponse;
 
     if (userResponse == "Yes" || userResponse == "yes") {
-        // Save the word as an emotion word
+        
         emotion_words[word].push_back({dominantType, averageValue});
         saveEmotionWords("../mechine knowledge/emotion_words.txt");
     }
 
-    // Remove the word from adjective file
     adjective_words.erase(word);
     saveAdjectiveWords("../mechine knowledge/adjective.txt");
 }
@@ -173,17 +165,15 @@ void analyzeIntensifierWordWithoutContext(const string& word) {
     while (true) {
         cin >> userValue;
 
-        // Validate the input
         if (cin.fail() || userValue <= 0) {
-            cin.clear(); // Clear the error flag
-            cin.ignore(numeric_limits<streamsize>::max(), '\n'); // Discard invalid input
+            cin.clear(); 
+            cin.ignore(numeric_limits<streamsize>::max(), '\n'); 
             cout << "Invalid input. Please enter a positive numeric value:" << endl;
         } else {
-            break; // Valid input
+            break; 
         }
     }
 
-    // Save the word as an intensifier with the user-provided value
     intensifier_words[word] = userValue;
     saveIntensifierWords("../mechine knowledge/intensifier_words.txt");
 
@@ -202,18 +192,17 @@ void analyzeIntensifierWordWithContext(const string& word, TrackedIntensifierWor
     cin >> userResponse;
 
     if (userResponse == "Yes" || userResponse == "yes") {
-        // Save the word as an intensifier
+        
         intensifier_words[word] = averageValue;
         saveIntensifierWords("../mechine knowledge/intensifier_words.txt");
     }
 
-    // Remove the word from adverb file
     adverb_words.erase(word);
     saveAdverbWords("../mechine knowledge/adverb.txt");
 }
 
 void analyzeTrackedData() {
-    // Define a map for emotion type names
+    
     unordered_map<int, string> emotionTypeNames = {
         {1, "Happy"},
         {2, "Sad"},
@@ -224,7 +213,6 @@ void analyzeTrackedData() {
         {7, "Neutral"}
     };
 
-    // Analyze tracked emotion words
     for (auto it = trackedEmotionWords.begin(); it != trackedEmotionWords.end();) {
         const string& word = it->first;
         TrackedEmotionWord& data = it->second;
@@ -240,7 +228,6 @@ void analyzeTrackedData() {
         }
     }
 
-    // Analyze tracked intensifier words
     for (auto it = trackedIntensifierWords.begin(); it != trackedIntensifierWords.end();) {
         const string& word = it->first;
         TrackedIntensifierWord& data = it->second;
