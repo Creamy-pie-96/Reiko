@@ -50,9 +50,8 @@ void analyzeMoodChanges() {
 
     cout << "Mood Change Analysis:" << endl;
     for (size_t i = 1; i < moodHistory.size(); ++i) {
-        double change = moodHistory[i] - moodHistory[i - 1]; // Preserve the sign of the change
+        double change = moodHistory[i] - moodHistory[i - 1]; // keep the sign of the change
 
-        // Categorize the change
         string changeCategory;
         if (abs(change) > RAPID_CHANGE_THRESHOLD) {
             changeCategory = "Rapid";
@@ -62,7 +61,7 @@ void analyzeMoodChanges() {
             changeCategory = "Slow";
         }
 
-        // Determine if the change is improving or declining
+        // Determine if the change is improving or worsening
         string direction = (change > 0) ? "Improving" : "Declining";
 
         cout << "Change from entry " << i << " to " << i + 1 << ": " << change
