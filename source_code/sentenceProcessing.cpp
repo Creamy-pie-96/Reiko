@@ -8,19 +8,16 @@ using namespace std;
 
 bool is_hi = false;
 
-// Function to normalize the input (convert to lowercase)
 void normalizer(vector<string>& input) {
     vector<string> normalizedSet;
 
     for (const auto& word : input) {
         string normalizedWord = word;
         if (word == "__EnD_Of_InPuT_123!@#__") {
-            // Preserve the end-of-input marker as is
             normalizedSet.push_back(word);
             continue;
         }
 
-        // Convert to lowercase
         transform(normalizedWord.begin(), normalizedWord.end(), normalizedWord.begin(), ::tolower);
 
         normalizedSet.push_back(normalizedWord);
@@ -39,23 +36,19 @@ map<int, string> tokenizer(vector<string>& user_input, const unordered_set<strin
 
 
     normalizer(user_input);
-
-    // Initialize token map
     map<int, string> tokenMap;
     int index = 0;
     bool greetingFound = false;
 
     for (const auto& sentence : user_input) {
-        // Check if the sentence is the end-of-input marker
         if (sentence == "__EnD_Of_InPuT_123!@#__") {
-            tokenMap[index++] = sentence; // Add the marker as is
+            tokenMap[index++] = sentence; 
             continue;
         }
 
         istringstream stream(sentence);
         string word;
 
-        // Check if any greeting word exists in the sentence before tokenizing
         if (!greetingFound) {
             for (const auto& greeting : hi_words) {
                 if (sentence.find(greeting) != string::npos) {
@@ -70,7 +63,6 @@ map<int, string> tokenizer(vector<string>& user_input, const unordered_set<strin
         if (greetingFound) {
             string remaining_sentence = sentence;
 
-            // Remove the greeting part from the sentence
             for (const auto& greeting : hi_words) {
                 size_t pos = remaining_sentence.find(greeting);
                 if (pos != string::npos) {
@@ -79,7 +71,6 @@ map<int, string> tokenizer(vector<string>& user_input, const unordered_set<strin
                 }
             }
 
-            // Tokenize the remaining part of the sentence
             istringstream remainingStream(remaining_sentence);
             while (remainingStream >> word) {
                 if (ispunct(word.back())) {
