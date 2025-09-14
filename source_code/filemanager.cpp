@@ -28,9 +28,8 @@ void fileManager(string filename, unordered_set<string> &input)
 
     string line;
     while (getline(file, line)) {
-        // Trim leading and trailing spaces and check if the line is empty
         if (line.empty() || line.find_first_not_of(" \t") == string::npos) {
-            continue; // Skip empty or whitespace-only lines
+            continue; 
         }
         input.insert(line);
     }
@@ -74,20 +73,15 @@ void FileManager2(string filename, unordered_map<string, vector<pair<int, double
     int emotionType;
     double emotionValue;
 
-    // Read each line and store the data in the unordered_map
     while (file >> key >> emotionType >> emotionValue) {
-        // Check if the line is empty or contains only whitespace
         if (key.empty() || file.fail()) {
-            continue; // Skip lines with invalid data
+            continue; 
         }
 
-        // Check if the word already exists in the map
         if (input.find(key) != input.end()) {
-            // If the word already exists, just push the new pair (emotionType, emotionValue)
             input[key].push_back(make_pair(emotionType, emotionValue));
         }
         else {
-            // If the word doesn't exist, create a new vector and push the pair
             input[key] = { make_pair(emotionType, emotionValue) };
         }
     }
