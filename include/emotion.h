@@ -15,6 +15,6 @@ void saveMoodHistory(const string& filename);
 extern vector<int> saveNegation;
 extern double emotionScore;
 extern int startIndex;
-extern vector<pair<double, vector<pair<int, double>>>> emotionPer_sentence; // Declare as extern
+extern vector<pair<double, vector<pair<int, double>>>> emotionPer_sentence; 
 extern vector<pair<double, int>> intensifiervalu_andItsIndex;
 extern unordered_set<string> hi_words;
